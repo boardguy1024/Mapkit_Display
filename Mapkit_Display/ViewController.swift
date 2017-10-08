@@ -7,19 +7,47 @@
 //
 
 import UIKit
+import MapKit
 
 class ViewController: UIViewController {
 
+    var myMapView: MKMapView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        myMapView = MKMapView()
+        myMapView.frame = self.view.bounds
+        myMapView.delegate = self
+        
+        self.view.addSubview(myMapView)
+        
+        //위도 경도를 사용해서 중심부를 지정
+        
+        let lat: CLLocationDegrees = 37.506804
+        let Lon: CLLocationDegrees = 139.930531
+        //WGS84(세계측지계)를 이용해서 경도,위도를 이용해 지리적좌표의 스트럭쳐를 구함
+        let centerCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(lat, Lon)
+        
+        //중심부로부터 범위를 설정
+        let latDistanceMeter: CLLocationDistance = 500
+        let lonDistanceMeter: CLLocationDistance = 500
+        
+        // reqion(지역)을 작성
+        let region: MKCoordinateRegion =
+            MKCoordinateRegionMakeWithDistance(centerCoordinate, latDistanceMeter, lonDistanceMeter)
+        
+        // reqion을 설정
+        myMapView.setRegion(region, animated: true)
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
+    
 
 }
 
+extension ViewController: MKMapViewDelegate {
+    
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        print("redionChanged!!!")
+    }
+    
+}
