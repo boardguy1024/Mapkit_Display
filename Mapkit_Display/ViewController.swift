@@ -8,41 +8,43 @@
 
 import UIKit
 import MapKit
+import CoreLocation
 
 class ViewController: UIViewController {
 
     var myMapView: MKMapView!
+    var locationManager: CLLocationManager!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        //mapView작성
         myMapView = MKMapView()
         myMapView.frame = self.view.bounds
         myMapView.delegate = self
-        
         self.view.addSubview(myMapView)
         
-        //위도 경도를 사용해서 중심부를 지정
+        //locationManager작성
+        locationManager = CLLocationManager()
+        locationManager.delegate = self
+        //거리의 필터
+        locationManager.distanceFilter = 100.0
         
-        let lat: CLLocationDegrees = 35.648984
-        let Lon: CLLocationDegrees = 139.551272
-        //WGS84(세계측지계)를 이용해서 경도,위도를 이용해 지리적좌표의 스트럭쳐를 구함
-        let centerCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(lat, Lon)
-//        
-//        //중심부로부터 범위를 설정
-//        let latDistanceMeter: CLLocationDistance = 500
-//        let lonDistanceMeter: CLLocationDistance = 500
-//        
-//        // reqion(지역)을 작성
-//        let region: MKCoordinateRegion =
-//            MKCoordinateRegionMakeWithDistance(centerCoordinate, latDistanceMeter, lonDistanceMeter)
+        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
         
-        let span: MKCoordinateSpan = MKCoordinateSpan(latitudeDelta: 0.001, longitudeDelta: 0.001)
+        //세큐리티 인증의 스테이터스를 취득
+        let status = CLLocationManager.authorizationStatus()
         
-        let region: MKCoordinateRegion = MKCoordinateRegion(center: centerCoordinate, span: span)
+        // 사용자의 인증되었는지 확인
+        if status != CLAuthorizationStatus.authorizedWhenInUse {
+            
+            //아직 인증되지 않은 상태면 인증다이어로그를 표시
+            locationManager.requestWhenInUseAuthorization()
+        }
         
-        // reqion을 설정
-        myMapView.setRegion(region, animated: true)
+        //위치정보의 갱신을 시작!!
+        locationManager.startUpdatingLocation()
+        
     }
     
 
@@ -55,3 +57,67 @@ extension ViewController: MKMapViewDelegate {
     }
     
 }
+
+extension ViewController: CLLocationManagerDelegate {
+    
+    //GPS로부터 값을 취득했을때에 호출되는 메소드
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print("didUpdateLocations")
+        
+        //배열에서 현재좌표를 취득
+        let locations: NSArray = locations as NSArray
+        let lastLocation: CLLocation = locations.lastObject as! CLLocation
+        let locationCenter: CLLocationCoordinate2D = lastLocation.coordinate
+        
+        // 縮尺 : Scale
+        let latDist: CLLocationDistance = 100
+        let lotDist: CLLocationDistance = 100
+        
+        // 지역을 작성
+        let region: MKCoordinateRegion = MKCoordinateRegionMakeWithDistance(locationCenter, latDist, lotDist)
+        
+        // mapView 에 반영
+        myMapView.setRegion(region, animated: true)
+        
+    }
+    
+    
+    // 인증이 변경되었을 때 호출되는 메소드
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        
+        switch status {
+        case .authorizedWhenInUse:
+            print("authorizedWhenInUse")
+        case .authorizedAlways:
+            print("authorizedAlways")
+        case .denied:
+            print("denied")
+        case .notDetermined:
+            print("notDetermined")
+        case .restricted:
+            print("restricted")
+        }
+        
+    }
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
